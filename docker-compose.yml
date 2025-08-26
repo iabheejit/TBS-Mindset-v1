@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  tbs-whatsapp:
+    build: .
+    container_name: tbs-whatsapp-learning
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - TZ=Asia/Kolkata
+    env_file:
+      - .env
+    volumes:
+      # Mount logs directory for persistence
+      - ./logs:/app/logs
+      # Mount source code for development (remove in production)
+      - ./server.js:/app/server.js
+      - ./wati.js:/app/wati.js
+      - ./update.js:/app/update.js
+      - ./test.js:/app/test.js
+      - ./image.js:/app/image.js
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/ping', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Optional: Add monitoring with Portainer
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    ports:
+      - "9000:9000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    restart: unless-stopped
+    profiles:
+      - monitoring
+
+volumes:
+  portainer_data:
+
+networks:
+  default:
+    name: tbs-network

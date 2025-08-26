@@ -2,7 +2,7 @@ const request = require('request-promise')
 const WA = require('./wati');
 const us = require('./update')
 var Airtable = require('airtable');
-require('dotenv').config("./env")
+require('dotenv').config();
 
 var base = new Airtable({ apiKey: process.env.apiKey }).base(process.env.base);
 

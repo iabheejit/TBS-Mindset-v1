@@ -1,5 +1,5 @@
 var request = require('request');
-require('dotenv').config("./env")
+require('dotenv').config();
 
 var request = require('request');
 
