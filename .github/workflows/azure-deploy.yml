@@ -2,34 +2,39 @@ name: Azure Deploy
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
   workflow_dispatch:
+
+# REQUIRED for azure/login
+permissions:
+  id-token: write
+  contents: read
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
 
-      - name: Set up Node.js
+      - name: ⚙️ Node
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      - run: npm install
-      - run: npm run build --if-present
+      - name: 📦 Install
+        run: npm install
 
-      - name: 🔐 Login to Azure
+      - name: 🏗️ Build (optional)
+        run: npm run build --if-present
+
+      - name: 🔐 Azure login
         uses: azure/login@v1
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-          client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: 🚀 Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
         with:
-          app-name: TBS-rg   # must match your App Service name in Azure
+          app-name: TBS-rg   # ensure this is the actual App Service name
           package: .
