@@ -5,7 +5,6 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
-# REQUIRED for azure/login
 permissions:
   id-token: write
   contents: read
@@ -14,50 +13,27 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: 📥 Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: ⚙️ Node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '20'
-
-      - name: 📦 Install
-        run: npm install
-
-      - name: 🏗️ Build (optional)
-        run: npm run build --if-present
 
       - name: Install prod deps
         run: npm ci --omit=dev
 
-      - name: 🔐 Azure login
+      - name: Login to Azure (OIDC)
         uses: azure/login@v2
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Configure App Settings (idempotent)
-        run: |
-          az webapp config appsettings set -g TBS-rg_group -n TBS-rg --settings \
-            NODE_ENV=production PORT=8080 TZ=Asia/Kolkata \
-            PERSONAL_ACCESS_TOKEN='${{ secrets.PERSONAL_ACCESS_TOKEN }}' \
-            BASE_ID='${{ secrets.BASE_ID }}' \
-            TABLE_ID='${{ secrets.TABLE_ID }}' \
-            CONTENT_TABLE_ID='${{ secrets.CONTENT_TABLE_ID }}' \
-            API='${{ secrets.API }}' \
-            WEBHOOK_URL='https://tbs-rg-gxfnddazdmcgbedm.centralindia-01.azurewebsites.net'
+      - name: Package app with dependencies
+        run: zip -r app.zip . -x ".git/*" ".github/*"
 
-      - name: Enforce Health Check Path
-        run: az webapp update -g TBS-rg_group -n TBS-rg --set siteConfig.healthCheckPath="/ping"
-
-      - name: Enable remote build
-        run: |
-          az webapp config appsettings set \
-            -g TBS-rg_group -n TBS-rg \
-            --settings SCM_DO_BUILD_DURING_DEPLOYMENT=true
-
-      - name: 🚀 Deploy to Azure Web App
+      - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
         with:
-          app-name: TBS-rg   # ensure this is the actual App Service name
-          package: .
+          app-name: TBS-rg
+          package: app.zip
