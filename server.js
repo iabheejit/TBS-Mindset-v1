@@ -1,9 +1,6 @@
 const dotenv = require('dotenv');
 if (process.env.NODE_ENV !== 'production') dotenv.config({ path: './.env' });
 
-// Remove all shims for lowercase env vars
-// Use only process.env.BASE_ID, process.env.TABLE_ID, process.env.CONTENT_TABLE_ID, process.env.PERSONAL_ACCESS_TOKEN everywhere
-
 // now require project modules that read env at import time
 const express = require('express');
 const cron = require('node-cron');
@@ -24,12 +21,12 @@ async function handleNewUser(senderID, userName = "Unknown") {
             console.log(`Registering new user: ${senderID}`);
             
             // Create new user in Airtable
-            const url = `https://api.airtable.com/v0/${process.env.baseId}/${process.env.tableId}`;
+            const url = `https://api.airtable.com/v0/${process.env.BASE_ID}/${process.env.TABLE_ID}`;
             
             const response = await fetch(url, {
                 method: 'POST',
                 headers: {
-                    'Authorization': `Bearer ${process.env.personal_access_token}`,
+                    'Authorization': `Bearer ${process.env.PERSONAL_ACCESS_TOKEN}`,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
@@ -75,11 +72,11 @@ async function deliverDailyCourse() {
         console.log('Starting daily course delivery...');
         
         // Get all active students
-        const url = `https://api.airtable.com/v0/${process.env.baseId}/${process.env.tableId}`;
+        const url = `https://api.airtable.com/v0/${process.env.BASE_ID}/${process.env.TABLE_ID}`;
         
         const response = await fetch(url, {
             headers: {
-                'Authorization': `Bearer ${process.env.personal_access_token}`,
+                'Authorization': `Bearer ${process.env.PERSONAL_ACCESS_TOKEN}`,
                 'Content-Type': 'application/json'
             }
         });
@@ -239,10 +236,10 @@ webApp.get('/ping', (req, res) => res.status(200).send('OK'));
 webApp.get('/status', async (req, res) => {
     try {
         // Test database connection
-        const testUrl = `https://api.airtable.com/v0/${process.env.baseId}/${process.env.tableId}?maxRecords=1`;
+        const testUrl = `https://api.airtable.com/v0/${process.env.BASE_ID}/${process.env.TABLE_ID}?maxRecords=1`;
         const testResponse = await fetch(testUrl, {
             headers: {
-                'Authorization': `Bearer ${process.env.personal_access_token}`,
+                'Authorization': `Bearer ${process.env.PERSONAL_ACCESS_TOKEN}`,
                 'Content-Type': 'application/json'
             }
         });
@@ -294,6 +291,9 @@ webApp.listen(PORT, HOST, () => {
     console.log(`Listening on ${HOST}:${PORT}`);
     console.log(`⏰ Daily course delivery scheduled for 9:00 AM IST`);
     console.log(`🌐 Webhook URL: ${process.env.WEBHOOK_URL || 'Not set'}/web`);
+    console.log(`🏥 Health check: http://${HOST}:${PORT}/ping`);
+    console.log('='.repeat(50));
+});
     console.log(`🏥 Health check: http://${HOST}:${PORT}/ping`);
     console.log('='.repeat(50));
 });

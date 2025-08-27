@@ -7,20 +7,20 @@ const sendContent = require('./image');
 // const outro = require('./outroflow');
 const { info } = require('pdfkit');
 
+const TABLE_ID = process.env.CONTENT_TABLE_ID;
+const BASE_ID = process.env.BASE_ID;
+const API_KEY = process.env.PERSONAL_ACCESS_TOKEN;
+let student_table = process.env.TABLE_ID;
+
 
 //Update Day completed field and next day field in Test's table for the given phone number 
 //Called on Finish day keyword
-
-let tableId = process.env.CONTENT_TABLE_ID;
-let student_table = process.env.TABLE_ID;
-let baseId = process.env.BASE_ID;
-let apiKey = process.env.PERSONAL_ACCESS_TOKEN;
 
 async function markDayComplete(number) {
  
 
     try {
-        const url = `https://api.airtable.com/v0/${baseId}/${student_table}`;
+        const url = `https://api.airtable.com/v0/${BASE_ID}/${student_table}`;
 
         const params = new URLSearchParams({
             filterByFormula: `({Phone} = "${number}")`,
@@ -29,7 +29,7 @@ async function markDayComplete(number) {
 
         const response = await fetch(`${url}?${params}`, {
             headers: {
-                'Authorization': `Bearer ${apiKey}`,
+                'Authorization': `Bearer ${API_KEY}`,
                 'Content-Type': 'application/json'
             }
         });
@@ -67,7 +67,7 @@ async function markDayComplete(number) {
             const updateResponse = await fetch(`${url}/${id}`, {
                 method: 'PATCH',
                 headers: {
-                    'Authorization': `Bearer ${apiKey}`,
+                    'Authorization': `Bearer ${API_KEY}`,
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({ fields: updateFields })
@@ -95,7 +95,7 @@ async function findDay(currentDay, number) {
         const course_tn = await us.findTable(number);
         console.log(`Table name of ${number} is ${course_tn}`);
 
-        const url = `https://api.airtable.com/v0/${baseId}/${course_tn}`;
+        const url = `https://api.airtable.com/v0/${BASE_ID}/${course_tn}`;
 
         const params = new URLSearchParams({
             filterByFormula: `({Day} = ${currentDay})`,
@@ -104,7 +104,7 @@ async function findDay(currentDay, number) {
 
         const response = await fetch(`${url}?${params}`, {
             headers: {
-                'Authorization': `Bearer ${apiKey}`,
+                'Authorization': `Bearer ${API_KEY}`,
                 'Content-Type': 'application/json'
             }
         });
@@ -172,7 +172,7 @@ async function sendList(currentDay, module_No, number) {
         const course_tn = await us.findTable(number);
         const id = await us.getID(number);
 
-        const url = `https://api.airtable.com/v0/${baseId}/${course_tn}`;
+        const url = `https://api.airtable.com/v0/${BASE_ID}/${course_tn}`;
 
         const params = new URLSearchParams({
             filterByFormula: `({Day} = ${currentDay})`,
@@ -181,7 +181,7 @@ async function sendList(currentDay, module_No, number) {
 
         const response = await fetch(`${url}?${params}`, {
             headers: {
-                'Authorization': `Bearer ${apiKey}`,
+                'Authorization': `Bearer ${API_KEY}`,
                 'Content-Type': 'application/json'
             }
         });
@@ -218,9 +218,9 @@ async function sendList(currentDay, module_No, number) {
 async function sendIMsg(currentDay, module_No, number) {
     var course_tn = await us.findTable(number);
 
-    const response = await fetch(`https://api.airtable.com/v0/${baseId}/${course_tn}?filterByFormula=({Day} = ${currentDay})&view=Grid view`, {
+    const response = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${course_tn}?filterByFormula=({Day} = ${currentDay})&view=Grid view`, {
         headers: {
-            Authorization: `Bearer ${apiKey}`
+            Authorization: `Bearer ${API_KEY}`
         }
     });
 
@@ -252,9 +252,9 @@ async function sendQues(currentDay, module_No, number) {
     var course_tn = await us.findTable(number);
     let id = await us.getID(number).then().catch(e => console.log(e));
 
-    const response = await fetch(`https://api.airtable.com/v0/${baseId}/${course_tn}?filterByFormula=({Day} = ${currentDay})&view=Grid view`, {
+    const response = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${course_tn}?filterByFormula=({Day} = ${currentDay})&view=Grid view`, {
         headers: {
-            Authorization: `Bearer ${apiKey}`
+            Authorization: `Bearer ${API_KEY}`
         }
     });
 
@@ -290,9 +290,9 @@ async function store_responses(number, value) {
     let course_tn = await us.findTable(number);
     console.log(value);
 
-    const response = await fetch(`https://api.airtable.com/v0/${baseId}/${student_table}?filterByFormula=({Phone} = "${number}")&view=Grid view`, {
+    const response = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${student_table}?filterByFormula=({Phone} = "${number}")&view=Grid view`, {
         headers: {
-            Authorization: `Bearer ${apiKey}`
+            Authorization: `Bearer ${API_KEY}`
         }
     });
 
@@ -563,9 +563,9 @@ async function store_responses(number, value) {
 async function store_intResponse(number, value) {
     let course_tn = await us.findTable(number);
 
-    const response = await fetch(`https://api.airtable.com/v0/${baseId}/${student_table}?filterByFormula=({Phone} = "${number}")&view=Grid view`, {
+    const response = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${student_table}?filterByFormula=({Phone} = "${number}")&view=Grid view`, {
         headers: {
-            Authorization: `Bearer ${apiKey}`
+            Authorization: `Bearer ${API_KEY}`
         }
     });
 
@@ -630,9 +630,9 @@ async function store_intResponse(number, value) {
 async function store_quesResponse(number, value) {
     // var course_tn = await us.findTable(number)
 
-    const response = await fetch(`https://api.airtable.com/v0/${baseId}/${student_table}?filterByFormula=({Phone} = ${number})&view=Grid view`, {
+    const response = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${student_table}?filterByFormula=({Phone} = ${number})&view=Grid view`, {
         headers: {
-            Authorization: `Bearer ${apiKey}`
+            Authorization: `Bearer ${API_KEY}`
         }
     });
 
@@ -711,9 +711,9 @@ async function findContent(currentDay, module_No, number) {
     var course_tn = await us.findTable(number);
     let id = await us.getID(number).then().catch(e => console.log(e));
 
-    const response = await fetch(`https://api.airtable.com/v0/${baseId}/${course_tn}?filterByFormula=({Day} = ${currentDay})&view=Grid view`, {
+    const response = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${course_tn}?filterByFormula=({Day} = ${currentDay})&view=Grid view`, {
         headers: {
-            Authorization: `Bearer ${apiKey}`
+            Authorization: `Bearer ${API_KEY}`
         }
     });
 
@@ -755,9 +755,9 @@ async function findContent(currentDay, module_No, number) {
 async function find_IntContent(currentDay, module_No, number) {
     var course_tn = await us.findTable(number);
 
-    const response = await fetch(`https://api.airtable.com/v0/${baseId}/${course_tn}?filterByFormula=({Day} = ${currentDay})&view=Grid view`, {
+    const response = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${course_tn}?filterByFormula=({Day} = ${currentDay})&view=Grid view`, {
         headers: {
-            Authorization: `Bearer ${apiKey}`
+            Authorization: `Bearer ${API_KEY}`
         }
     });
 
@@ -811,10 +811,10 @@ async function find_QContent(currentDay, module_No, number) {
         var course_tn = await us.findTable(number)
         console.log("findModule ", course_tn)
 
-        const response = await fetch(`https://api.airtable.com/v0/${baseId}/${course_tn}/?filterByFormula=Day%3D${currentDay}`, {
+        const response = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${course_tn}/?filterByFormula=Day%3D${currentDay}`, {
             method: 'GET',
             headers: {
-                'Authorization': `Bearer ${apiKey}`,
+                'Authorization': `Bearer ${API_KEY}`,
                 'Content-Type': 'application/json'
             }
         });
@@ -906,10 +906,10 @@ async function findModule(currentDay, module_No, number) {
     var course_tn = await us.findTable(number)
     console.log("findModule ", module_No, currentDay)
 
-    const response = await fetch(`https://api.airtable.com/v0/${baseId}/${course_tn}?filterByFormula=Day%3D${currentDay}`, {
+    const response = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${course_tn}?filterByFormula=Day%3D${currentDay}`, {
         method: 'GET',
         headers: {
-            'Authorization': `Bearer ${apiKey}`,
+            'Authorization': `Bearer ${API_KEY}`,
             'Content-Type': 'application/json'
         }
     });
@@ -1245,10 +1245,10 @@ async function sendModuleContent(number) {
     // records_Student.forEach(async function (record) {
 
 
-    const response = await fetch(`https://api.airtable.com/v0/${baseId}/${student_table}?filterByFormula=Phone%3D${number}`, {
+    const response = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${student_table}?filterByFormula=Phone%3D${number}`, {
         method: 'GET',
         headers: {
-            'Authorization': `Bearer ${apiKey}`,
+            'Authorization': `Bearer ${API_KEY}`,
             'Content-Type': 'application/json'
         }
     });
@@ -1306,10 +1306,10 @@ async function sendStartDayTopic(next_module, cDay, number) {
     var course_tn = await us.findTable(number)
     // console.log("findModule ", module_No, currentDay)
 
-    const response = await fetch(`https://api.airtable.com/v0/${baseId}/${course_tn}?filterByFormula=Day%3D${cDay}`, {
+    const response = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${course_tn}?filterByFormula=Day%3D${cDay}`, {
         method: 'GET',
         headers: {
-            'Authorization': `Bearer ${apiKey}`,
+            'Authorization': `Bearer ${API_KEY}`,
             'Content-Type': 'application/json'
         }
     });
@@ -1361,10 +1361,10 @@ async function sendStartDayTopic(next_module, cDay, number) {
 
 
 async function markModuleComplete(number) {
-    const response = await fetch(`https://api.airtable.com/v0/${baseId}/${student_table}?filterByFormula=Phone%3D${number}`, {
+    const response = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${student_table}?filterByFormula=Phone%3D${number}`, {
         method: 'GET',
         headers: {
-            'Authorization': `Bearer ${apiKey}`,
+            'Authorization': `Bearer ${API_KEY}`,
             'Content-Type': 'application/json'
         }
     });
@@ -1416,10 +1416,10 @@ async function markModuleComplete_v2(c_m, number) {
     // }).all();
 
         // records_Student.forEach(async function (record) {
-    const response = await fetch(`https://api.airtable.com/v0/${baseId}/${student_table}?filterByFormula=Phone%3D${number}`, {
+    const response = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${student_table}?filterByFormula=Phone%3D${number}`, {
             method: 'GET',
             headers: {
-                'Authorization': `Bearer ${apiKey}`,
+                'Authorization': `Bearer ${API_KEY}`,
                 'Content-Type': 'application/json'
             }
         });
