@@ -50,11 +50,11 @@ jobs:
       - name: Enforce Health Check Path
         run: az webapp update -g TBS-rg_group -n TBS-rg --set siteConfig.healthCheckPath="/ping"
 
-      - name: Disable remote build
+      - name: Enable remote build
         run: |
           az webapp config appsettings set \
             -g TBS-rg_group -n TBS-rg \
-            --settings SCM_DO_BUILD_DURING_DEPLOYMENT=false
+            --settings SCM_DO_BUILD_DURING_DEPLOYMENT=true
 
       - name: 🚀 Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
