@@ -32,15 +32,29 @@ jobs:
         run: npm ci --omit=dev
 
       - name: 🔐 Azure login
-        uses: azure/login@v1
+        uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Disable remote build + pin PORT
+      - name: Configure App Settings (idempotent)
+        run: |
+          az webapp config appsettings set -g TBS-rg_group -n TBS-rg --settings \
+            NODE_ENV=production PORT=8080 TZ=Asia/Kolkata \
+            PERSONAL_ACCESS_TOKEN='${{ secrets.PERSONAL_ACCESS_TOKEN }}' \
+            BASE_ID='${{ secrets.BASE_ID }}' \
+            TABLE_ID='${{ secrets.TABLE_ID }}' \
+            CONTENT_TABLE_ID='${{ secrets.CONTENT_TABLE_ID }}' \
+            API='${{ secrets.API }}' \
+            WEBHOOK_URL='https://tbs-rg-gxfnddazdmcgbedm.centralindia-01.azurewebsites.net'
+
+      - name: Enforce Health Check Path
+        run: az webapp update -g TBS-rg_group -n TBS-rg --set siteConfig.healthCheckPath="/ping"
+
+      - name: Disable remote build
         run: |
           az webapp config appsettings set \
             -g TBS-rg_group -n TBS-rg \
-            --settings SCM_DO_BUILD_DURING_DEPLOYMENT=false PORT=8080
+            --settings SCM_DO_BUILD_DURING_DEPLOYMENT=false
 
       - name: 🚀 Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
