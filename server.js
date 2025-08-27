@@ -227,14 +227,8 @@ webApp.post('/send-course', async (req, res) => {
     }
 });
 
-// Health check endpoint
-webApp.get('/ping', (req, res) => {
-    res.status(200).json({
-        status: 'healthy',
-        timestamp: new Date().toISOString(),
-        uptime: process.uptime()
-    });
-});
+// quick health
+webApp.get('/ping', (req, res) => res.status(200).send('OK'));
 
 // Get system status
 webApp.get('/status', async (req, res) => {
@@ -288,12 +282,13 @@ cron.schedule('0 18 * * *', async () => {
 });
 
 // Start server
-const PORT = process.env.PORT || 3000;
-webApp.listen(PORT, () => {
+const PORT = Number(process.env.PORT) || 3000;
+const HOST = '0.0.0.0';
+webApp.listen(PORT, HOST, () => {
     console.log('🚀 TBS WhatsApp Learning System Started');
-    console.log(`📡 Server running on port ${PORT}`);
+    console.log(`Listening on ${HOST}:${PORT}`);
     console.log(`⏰ Daily course delivery scheduled for 9:00 AM IST`);
     console.log(`🌐 Webhook URL: ${process.env.WEBHOOK_URL || 'Not set'}/web`);
-    console.log(`🏥 Health check: http://localhost:${PORT}/ping`);
+    console.log(`🏥 Health check: http://${HOST}:${PORT}/ping`);
     console.log('='.repeat(50));
 });
