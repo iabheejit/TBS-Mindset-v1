@@ -12,17 +12,17 @@ const webApp = express();
 webApp.use(express.json());
 
 // User Registration Handler
-async function handleNewUser(senderID, userName = "Unknown") {
+async function handleNewUser(senderID, userName = "Unknown", res) {
     try {
         // Check if user already exists
         let existingUser = await airtable.getID(senderID);
-        
+
         if (!existingUser) {
             console.log(`Registering new user: ${senderID}`);
-            
+
             // Create new user in Airtable
             const url = `https://api.airtable.com/v0/${process.env.BASE_ID}/${process.env.TABLE_ID}`;
-            
+
             const response = await fetch(url, {
                 method: 'POST',
                 headers: {
@@ -34,34 +34,34 @@ async function handleNewUser(senderID, userName = "Unknown") {
                         Phone: senderID,
                         Name: userName,
                         Course: "TBS-Mindset",
-                        "Next Day": 1,
-                        "Next Module": 0,
-                        "Day Completed": 0,
-                        "Module Completed": 0,
                         "Registration Date": new Date().toISOString(),
                         "Last_Msg": "Welcome"
                     }
                 })
             });
-            
-            if (response.ok) {
-                console.log(`New user registered: ${senderID}`);
-                
-                // Send welcome message
-                setTimeout(() => {
-                    WA.sendText(`Welcome to the TBS Mindset Course! 🎉\n\nYou've been successfully enrolled. Your learning journey will begin tomorrow at 9 AM.\n\nIf you want to start immediately, type "Start Day".\n\n_Powered by ekatra.one_`, senderID);
-                }, 1000);
-                
-                return true;
-            } else {
-                console.error('Failed to register user:', await response.text());
+
+            if (!response.ok) {
+                const txt = await response.text();
+                console.error('Failed to register user:', txt);
+                res.status(400).json({ ok: false, error: 'Airtable create failed', detail: txt });
+                return false;
             }
+
+            console.log(`New user registered: ${senderID}`);
+
+            // Send welcome message
+            setTimeout(() => {
+                WA.sendText(`Welcome to the TBS Mindset Course! 🎉\n\nYou've been successfully enrolled. Your learning journey will begin tomorrow at 9 AM.\n\nIf you want to start immediately, type "Start Day".\n\n_Powered by ekatra.one_`, senderID);
+            }, 1000);
+
+            return true;
         } else {
             console.log(`User ${senderID} already exists`);
         }
         return false;
     } catch (error) {
         console.error('Error registering new user:', error);
+        res.status(500).json({ ok: false, error: 'User registration failed' });
         return false;
     }
 }
@@ -132,18 +132,30 @@ async function deliverDailyCourse() {
 // Route for WhatsApp Webhook
 webApp.post('/web', async (req, res) => {
     try {
-        let senderID = req.body.waId;
-        let keyword = req.body.text || '';
-        
+        if (!req.is('application/json')) {
+            return res.status(415).json({ ok: false, error: 'Content-Type must be application/json' });
+        }
+        if (!req.body || typeof req.body !== 'object') {
+            return res.status(400).json({ ok: false, error: 'Invalid JSON body' });
+        }
+        const senderID = req.body.waId;
+        const keyword = req.body.text || '';
+        if (!senderID || typeof senderID !== 'string') {
+            console.warn('Webhook missing waId:', req.body);
+            return res.status(400).json({ ok: false, error: 'Missing waId' });
+        }
+
         console.log(`📱 Received message from ${senderID}: ${keyword}`);
         console.log('Full request body:', JSON.stringify(req.body, null, 2));
-        
+
         // Check for new user first
         let id = await airtable.getID(senderID);
         if (!id) {
             console.log(`👤 New user detected: ${senderID}`);
-            await handleNewUser(senderID, req.body.senderName || "Unknown");
-            res.status(200).send('New user registered');
+            const registered = await handleNewUser(senderID, req.body.senderName || "Unknown", res);
+            if (registered) {
+                res.status(200).send('New user registered');
+            }
             return;
         }
         

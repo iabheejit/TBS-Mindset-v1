@@ -38,41 +38,26 @@ async function updateField(id, field_name, updatedValue) {
 }
 // updateField("rec3UHUHucZVYTBoY", "Last_Msg", "hdhhdhdhdh")
 
-async function getID(number) {
- 
-
-  const url = `https://api.airtable.com/v0/${baseId}/${tableId}`;
-
-  const params = new URLSearchParams({
-    filterByFormula: `({Phone} = "${number}")`,
-    view: 'Grid view'
-  });
-
+async function getID(phone) {
   try {
-    const response = await fetch(`${url}?${params}`, {
+    if (!phone) return null;
+    const fbf = encodeURIComponent(`{Phone} = '${phone}'`);
+    const url = `https://api.airtable.com/v0/${baseId}/${tableId}?filterByFormula=${fbf}&maxRecords=1&fields=Phone`;
+    const r = await fetch(url, {
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json'
       }
     });
-
-    if (!response.ok) {
-      const errorBody = await response.text();
-      throw new Error(`HTTP error! status: ${response.status}, body: ${errorBody}`);
+    if (!r.ok) {
+      const txt = await r.text();
+      throw new Error(`Airtable getID HTTP ${r.status}: ${txt}`);
     }
-
-    const data = await response.json();
-
-    if (data.records && data.records.length > 0) {
-      const id = data.records[0].id;
-      console.log("id", id);
-      return id;
-    } else {
-      throw new Error('No matching record found');
-    }
-  } catch (error) {
-    console.error('Error in getID:', error);
-    //throw error;
+    const data = await r.json();
+    return data.records?.[0]?.id ?? null;
+  } catch (e) {
+    console.error('getID error:', e);
+    throw e;
   }
 }
 
@@ -558,5 +543,5 @@ module.exports = {
   findLastMsg,
   findField,
   findAns,
-  find_ContentField}
-  find_ContentField}
+  find_ContentField
+};
