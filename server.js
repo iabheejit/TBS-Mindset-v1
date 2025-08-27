@@ -294,12 +294,3 @@ webApp.listen(PORT, HOST, () => {
     console.log(`🏥 Health check: http://${HOST}:${PORT}/ping`);
     console.log('='.repeat(50));
 });
-    console.log(`🏥 Health check: http://${HOST}:${PORT}/ping`);
-    console.log('='.repeat(50));
-});
-    console.log(`Listening on ${HOST}:${PORT}`);
-    console.log(`⏰ Daily course delivery scheduled for 9:00 AM IST`);
-    console.log(`🌐 Webhook URL: ${process.env.WEBHOOK_URL || 'Not set'}/web`);
-    console.log(`🏥 Health check: http://${HOST}:${PORT}/ping`);
-    console.log('='.repeat(50));
-});
