@@ -1,14 +1,8 @@
 const dotenv = require('dotenv');
 if (process.env.NODE_ENV !== 'production') dotenv.config({ path: './.env' });
 
-// Alias Azure UPPERCASE -> legacy lowercase names used in code/SDK
-if (!process.env.AIRTABLE_API_KEY && process.env.PERSONAL_ACCESS_TOKEN) {
-  process.env.AIRTABLE_API_KEY = process.env.PERSONAL_ACCESS_TOKEN;
-}
-process.env.baseId          ||= process.env.BASE_ID;
-process.env.tableId         ||= process.env.TABLE_ID;
-process.env.content_tableID ||= process.env.CONTENT_TABLE_ID;
-process.env.personal_access_token ||= process.env.PERSONAL_ACCESS_TOKEN;
+// Remove all shims for lowercase env vars
+// Use only process.env.BASE_ID, process.env.TABLE_ID, process.env.CONTENT_TABLE_ID, process.env.PERSONAL_ACCESS_TOKEN everywhere
 
 // now require project modules that read env at import time
 const express = require('express');
@@ -297,6 +291,12 @@ const PORT = Number(process.env.PORT) || 3000;
 const HOST = '0.0.0.0';
 webApp.listen(PORT, HOST, () => {
     console.log('🚀 TBS WhatsApp Learning System Started');
+    console.log(`Listening on ${HOST}:${PORT}`);
+    console.log(`⏰ Daily course delivery scheduled for 9:00 AM IST`);
+    console.log(`🌐 Webhook URL: ${process.env.WEBHOOK_URL || 'Not set'}/web`);
+    console.log(`🏥 Health check: http://${HOST}:${PORT}/ping`);
+    console.log('='.repeat(50));
+});
     console.log(`Listening on ${HOST}:${PORT}`);
     console.log(`⏰ Daily course delivery scheduled for 9:00 AM IST`);
     console.log(`🌐 Webhook URL: ${process.env.WEBHOOK_URL || 'Not set'}/web`);

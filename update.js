@@ -2,11 +2,10 @@ const { response } = require('express');
 
 require('dotenv').config();
 
-// let base = new Airtable({ apiKey: process.env.apiKey }).base(process.env.base);
-
-let tableId = process.env.tableId;
-let baseId = process.env.baseId;
-let apiKey = process.env.personal_access_token;
+// Remove all lowercase env usage, use UPPERCASE only
+let tableId = process.env.TABLE_ID;
+let baseId = process.env.BASE_ID;
+let apiKey = process.env.PERSONAL_ACCESS_TOKEN;
 
 async function updateField(id, field_name, updatedValue) {
   try {
@@ -559,4 +558,5 @@ module.exports = {
   findLastMsg,
   findField,
   findAns,
+  find_ContentField}
   find_ContentField}

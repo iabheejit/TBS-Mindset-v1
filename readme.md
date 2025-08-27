@@ -69,10 +69,10 @@ URL=your-instance.wati.io
 API=Bearer your_wati_token
 
 # Airtable Configuration  
-baseId=appXXXXXXXXXXXXXX
-tableId=tblXXXXXXXXXXXXXX
-content_tableID=tblYYYYYYYYYYYYYY
-personal_access_token=patXXXXXXXXXXXXXX...
+BASE_ID=appXXXXXXXXXXXXXX
+TABLE_ID=tblXXXXXXXXXXXXXX
+CONTENT_TABLE_ID=tblYYYYYYYYYYYYYY
+PERSONAL_ACCESS_TOKEN=patXXXXXXXXXXXXXX...
 
 # Server Configuration
 PORT=3000

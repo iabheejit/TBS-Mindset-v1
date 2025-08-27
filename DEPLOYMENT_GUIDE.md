@@ -5,5 +5,5 @@
 ### 1. Environment Configuration
 Your .env file should contain:
 - WATI API credentials (URL, API token)
-- Airtable credentials (base ID, table IDs, PAT)
+- Airtable credentials (BASE_ID, TABLE_ID, CONTENT_TABLE_ID, PERSONAL_ACCESS_TOKEN)
 - Azure webhook URL
