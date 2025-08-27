@@ -1,21 +1,20 @@
-var Airtable = require('airtable');
+const Airtable = require('airtable');
 require('dotenv').config();
+const base = new Airtable({ apiKey: process.env.PERSONAL_ACCESS_TOKEN }).base(process.env.BASE_ID);
 const WA = require('./wati');
 const us = require('./update');
 const sendContent = require('./image');
 // const outro = require('./outroflow');
 const { info } = require('pdfkit');
 
-// var baseId = new Airtable({ apiKey: process.env.apiKey }).baseId(process.env.baseId);
-
 
 //Update Day completed field and next day field in Test's table for the given phone number 
 //Called on Finish day keyword
 
-let tableId = process.env.content_tableID;
-let student_table = process.env.tableId
-let baseId = process.env.baseId;
-let apiKey = process.env.personal_access_token;
+let tableId = process.env.CONTENT_TABLE_ID;
+let student_table = process.env.TABLE_ID;
+let baseId = process.env.BASE_ID;
+let apiKey = process.env.PERSONAL_ACCESS_TOKEN;
 
 async function markDayComplete(number) {
  
