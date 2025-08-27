@@ -1,10 +1,21 @@
-// external packages
+const dotenv = require('dotenv');
+if (process.env.NODE_ENV !== 'production') dotenv.config({ path: './.env' });
+
+// Alias Azure UPPERCASE -> legacy lowercase names used in code/SDK
+if (!process.env.AIRTABLE_API_KEY && process.env.PERSONAL_ACCESS_TOKEN) {
+  process.env.AIRTABLE_API_KEY = process.env.PERSONAL_ACCESS_TOKEN;
+}
+process.env.baseId          ||= process.env.BASE_ID;
+process.env.tableId         ||= process.env.TABLE_ID;
+process.env.content_tableID ||= process.env.CONTENT_TABLE_ID;
+process.env.personal_access_token ||= process.env.PERSONAL_ACCESS_TOKEN;
+
+// now require project modules that read env at import time
 const express = require('express');
 const cron = require('node-cron');
-require('dotenv').config();
 const test = require('./test');
 const WA = require('./wati');
-const airtable = require("./update");
+const airtable = require('./update');
 
 const webApp = express();
 webApp.use(express.json());
