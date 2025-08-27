@@ -1,10 +1,10 @@
-const request = require('request-promise')
+const request = require('request-promise');
 const WA = require('./wati');
-const us = require('./update')
-var Airtable = require('airtable');
+const us = require('./update');
+const Airtable = require('airtable');
 require('dotenv').config();
 
-var base = new Airtable({ apiKey: process.env.apiKey }).base(process.env.base);
+const base = new Airtable({ apiKey: process.env.PERSONAL_ACCESS_TOKEN }).base(process.env.BASE_ID);
 
 
 async function sendMediaFile(cDay, cModule, number) {
