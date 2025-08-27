@@ -29,6 +29,22 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
+      - name: Sync App Settings (Azure)
+        uses: azure/appservice-settings@v1
+        with:
+          app-name: TBS-rg
+          app-settings-json: |
+            [
+              {"name":"SCM_DO_BUILD_DURING_DEPLOYMENT","value":"true","slotSetting":false},
+              {"name":"NODE_ENV","value":"production","slotSetting":false},
+              {"name":"PORT","value":"8080","slotSetting":false},
+              {"name":"WEBHOOK_URL","value":"https://tbs-rg-gxfnddazdmcgbedm.centralindia-01.azurewebsites.net","slotSetting":false},
+              {"name":"BASE_ID","value":"appYpfAZAzwHxrwS1","slotSetting":false},
+              {"name":"TABLE_ID","value":"tblN49L3n257qWLR8","slotSetting":false},
+              {"name":"CONTENT_TABLE_ID","value":"<your-content-table>","slotSetting":false},
+              {"name":"PERSONAL_ACCESS_TOKEN","value":"***","slotSetting":false}
+            ]
+
       - name: Package app with dependencies
         run: zip -r app.zip . -x ".git/*" ".github/*"
 
@@ -37,3 +53,4 @@ jobs:
         with:
           app-name: TBS-rg
           package: app.zip
+
