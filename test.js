@@ -233,6 +233,10 @@ async function sendIMsg(currentDay, module_No, number) {
     const records = data.records;
 
     // Process only the first record since we expect one record per day
+    // Note: The query filters by Day, which should return exactly one record
+    if (records.length > 1) {
+        console.log(`Warning: Expected 1 record for Day ${currentDay}, found ${records.length}. Processing first only.`);
+    }
     if (records.length > 0) {
         const record = records[0];
         console.log(module_No);
@@ -333,7 +337,7 @@ async function store_responses(number, value) {
         } catch (e) {
             console.error(e);
         }
-        let title = list ? list[0] : undefined;
+        let title = list && list.length > 0 ? list[0] : undefined;
         
         let correct_ans;
         try {
@@ -814,7 +818,12 @@ async function find_IntContent(currentDay, module_No, number) {
     if (records.length > 0) {
         const record = records[0];
         let module_title = record.fields[`Module ${module_No} LTitle`];
-        let id = await us.getID(number).then().catch(e => console.log(e));
+        let id;
+        try {
+            id = await us.getID(number);
+        } catch (e) {
+            console.log(e);
+        }
 
         console.log(module_title);
 
