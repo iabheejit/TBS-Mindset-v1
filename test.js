@@ -441,7 +441,7 @@ async function store_responses(number, value) {
             // Reuse already fetched correct_ans and existingValues instead of fetching again
             console.log("Correct ans ", correct_ans);
 
-            let options = list.filter((v, i) => i !== 0);
+            let options = list && list.length > 0 ? list.filter((v, i) => i !== 0) : [];
 
             const isCorrect = correct_ans === value;
             const isSecondAttempt = last_msg == "Incorrect";

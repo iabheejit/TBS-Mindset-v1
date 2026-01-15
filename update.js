@@ -115,6 +115,12 @@ const totalDays = async (number) => {
     // Get the course table name first
     const course_tn = await findTable(number);
     
+    // Handle case where findTable returns null/undefined
+    if (!course_tn) {
+      console.error('totalDays: Could not find course table for user', number);
+      return undefined;
+    }
+    
     // Check cache using course name as key (all users in same course have same totalDays)
     const cached = getCached(cache.totalDays, course_tn);
     if (cached !== null) {
