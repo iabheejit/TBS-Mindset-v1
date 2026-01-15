@@ -252,7 +252,12 @@ async function sendIMsg(currentDay, module_No, number) {
 
 async function sendQues(currentDay, module_No, number) {
     var course_tn = await us.findTable(number);
-    let id = await us.getID(number).then().catch(e => console.log(e));
+    let id;
+    try {
+        id = await us.getID(number);
+    } catch (e) {
+        console.log(e);
+    }
 
     const response = await fetch(`https://api.airtable.com/v0/${BASE_ID}/${course_tn}?filterByFormula=({Day} = ${currentDay})&view=Grid view`, {
         headers: {
@@ -313,13 +318,36 @@ async function store_responses(number, value) {
         let id = record.id;
         let currentModule = record.fields["Next Module"];
         let currentDay = record.fields["Next Day"];
-        let last_msg = await us.findLastMsg(number).then().catch(e => console.log("last msg error " + e));
+        
+        let last_msg;
+        try {
+            last_msg = await us.findLastMsg(number);
+        } catch (e) {
+            console.log("last msg error " + e);
+        }
         
         // Fetch these values once and reuse them throughout the function
-        let list = await us.findTitle(currentDay, currentModule, number).then().catch(e => console.error(e));
-        let title = list[0];
-        let correct_ans = await us.findAns(currentDay, currentModule, number).then().catch(e => console.log("Error in findAns ", e));
-        let existingValues = await us.findField("Question Responses", number).then().catch(e => console.error(e));
+        let list;
+        try {
+            list = await us.findTitle(currentDay, currentModule, number);
+        } catch (e) {
+            console.error(e);
+        }
+        let title = list ? list[0] : undefined;
+        
+        let correct_ans;
+        try {
+            correct_ans = await us.findAns(currentDay, currentModule, number);
+        } catch (e) {
+            console.log("Error in findAns ", e);
+        }
+        
+        let existingValues;
+        try {
+            existingValues = await us.findField("Question Responses", number);
+        } catch (e) {
+            console.error(e);
+        }
         
         if (correct_ans == null) {
             console.log("currentDay ", currentDay);
@@ -581,9 +609,19 @@ async function store_intResponse(number, value) {
         let currentDay = record.fields["Next Day"];
         let last_msg = record.fields["Last_Msg"];
 
-        let existingValues = await us.findField("Interactive_Responses", number).then().catch(e => console.log("e2", e));
+        let existingValues;
+        try {
+            existingValues = await us.findField("Interactive_Responses", number);
+        } catch (e) {
+            console.log("e2", e);
+        }
 
-        let list = await us.findInteractive(currentDay, currentModule, number).then().catch(e => console.error(e));
+        let list;
+        try {
+            list = await us.findInteractive(currentDay, currentModule, number);
+        } catch (e) {
+            console.error(e);
+        }
 
         if (list != undefined) {
             let title = list[0];
@@ -648,7 +686,12 @@ async function store_quesResponse(number, value) {
         let last_msg = record.fields["Last_Msg"];
 
         if (currentModule !== undefined) {
-            let ques = await us.findQuestion(currentDay, currentModule, number).then().catch(e => console.error("Error in store_quesResponse ", e));
+            let ques;
+            try {
+                ques = await us.findQuestion(currentDay, currentModule, number);
+            } catch (e) {
+                console.error("Error in store_quesResponse ", e);
+            }
 
             if (typeof last_msg === 'string') {
                 last_msg = last_msg.replace("Q: ", "");

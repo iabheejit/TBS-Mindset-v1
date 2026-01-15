@@ -90,23 +90,14 @@ async function deliverDailyCourse() {
         
         let sentCount = 0;
         
-        // Pre-fetch totalDays once for all users (cached after first call)
-        // All users share the same course, so we only need to call this once
-        let courseTotalDays = null;
-        if (data.records.length > 0) {
-            const firstPhone = data.records[0].fields.Phone;
-            if (firstPhone) {
-                courseTotalDays = await airtable.totalDays(firstPhone);
-            }
-        }
-        
         // Process each student
         for (const record of data.records) {
             const phone = record.fields.Phone;
             const nextDay = record.fields["Next Day"];
             const nextModule = record.fields["Next Module"];
-            // Use cached totalDays instead of fetching for each user
-            const totalDays = courseTotalDays;
+            // totalDays is now cached by course name in update.js, so calling this
+            // for each user is efficient - subsequent calls for same course are cached
+            const totalDays = await airtable.totalDays(phone);
             
             console.log(`User ${phone}: Day ${nextDay}, Module ${nextModule}`);
             

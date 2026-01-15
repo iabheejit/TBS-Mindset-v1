@@ -29,6 +29,11 @@ function setCache(cacheMap, key, value) {
   cacheMap.set(key, { value, expiry: Date.now() + CACHE_TTL });
 }
 
+/**
+ * Clears cached data for a specific user.
+ * Call this when user data changes (e.g., user course enrollment changes).
+ * @param {string} phone - The user's phone number to clear from cache
+ */
 function clearUserCache(phone) {
   cache.userTables.delete(phone);
   cache.userIds.delete(phone);
