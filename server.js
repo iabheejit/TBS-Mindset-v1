@@ -95,6 +95,8 @@ async function deliverDailyCourse() {
             const phone = record.fields.Phone;
             const nextDay = record.fields["Next Day"];
             const nextModule = record.fields["Next Module"];
+            // totalDays is now cached by course name in update.js, so calling this
+            // for each user is efficient - subsequent calls for same course are cached
             const totalDays = await airtable.totalDays(phone);
             
             console.log(`User ${phone}: Day ${nextDay}, Module ${nextModule}`);
