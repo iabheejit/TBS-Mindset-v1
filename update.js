@@ -7,6 +7,33 @@ let tableId = process.env.TABLE_ID;
 let baseId = process.env.BASE_ID;
 let apiKey = process.env.PERSONAL_ACCESS_TOKEN;
 
+// In-memory cache with TTL for frequently accessed data
+const cache = {
+  userTables: new Map(), // phone -> { value, expiry }
+  userIds: new Map(),    // phone -> { value, expiry }
+  totalDays: new Map(),  // courseName -> { value, expiry }
+};
+
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes TTL
+
+function getCached(cacheMap, key) {
+  const entry = cacheMap.get(key);
+  if (entry && Date.now() < entry.expiry) {
+    return entry.value;
+  }
+  cacheMap.delete(key);
+  return null;
+}
+
+function setCache(cacheMap, key, value) {
+  cacheMap.set(key, { value, expiry: Date.now() + CACHE_TTL });
+}
+
+function clearUserCache(phone) {
+  cache.userTables.delete(phone);
+  cache.userIds.delete(phone);
+}
+
 async function updateField(id, field_name, updatedValue) {
   try {
     const tableName = 'Test'; // Replace with your table name
@@ -41,6 +68,13 @@ async function updateField(id, field_name, updatedValue) {
 async function getID(phone) {
   try {
     if (!phone) return null;
+    
+    // Check cache first
+    const cached = getCached(cache.userIds, phone);
+    if (cached !== null) {
+      return cached;
+    }
+    
     const fbf = encodeURIComponent(`{Phone} = '${phone}'`);
     const url = `https://api.airtable.com/v0/${baseId}/${tableId}?filterByFormula=${fbf}&maxRecords=1&fields=Phone`;
     const r = await fetch(url, {
@@ -54,7 +88,14 @@ async function getID(phone) {
       throw new Error(`Airtable getID HTTP ${r.status}: ${txt}`);
     }
     const data = await r.json();
-    return data.records?.[0]?.id ?? null;
+    const id = data.records?.[0]?.id ?? null;
+    
+    // Cache the result
+    if (id !== null) {
+      setCache(cache.userIds, phone, id);
+    }
+    
+    return id;
   } catch (e) {
     console.error('getID error:', e);
     throw e;
@@ -66,16 +107,17 @@ async function getID(phone) {
 
 const totalDays = async (number) => {
   try {
-    
-
-    // Assuming findTable is a function you've defined elsewhere
+    // Get the course table name first
     const course_tn = await findTable(number);
-    // console.log("course_tn", course_tn);
+    
+    // Check cache using course name as key (all users in same course have same totalDays)
+    const cached = getCached(cache.totalDays, course_tn);
+    if (cached !== null) {
+      return cached;
+    }
 
     const url = `https://api.airtable.com/v0/${baseId}/${course_tn}?fields%5B%5D=Day`;
     console.log(url)
-
-
 
     const response = await fetch(`${url}`, {
       headers: {
@@ -93,6 +135,10 @@ const totalDays = async (number) => {
 
     const count = data.records.length;
     console.log(count);
+    
+    // Cache the result by course name
+    setCache(cache.totalDays, course_tn, count);
+    
     return count;
 
   } catch (error) {
@@ -102,6 +148,11 @@ const totalDays = async (number) => {
 };
 
 const findTable = async (number) => {
+  // Check cache first
+  const cached = getCached(cache.userTables, number);
+  if (cached !== null) {
+    return cached;
+  }
 
   const url = `https://api.airtable.com/v0/${baseId}/${tableId}`;
 
@@ -127,7 +178,8 @@ const findTable = async (number) => {
 
     if (data.records && data.records.length > 0) {
       const course_tn = data.records[0].fields.Course;
-      // console.log("Table Name = " + course_tn);
+      // Cache the result
+      setCache(cache.userTables, number, course_tn);
       return course_tn;
     } else {
       // throw new Error('No matching record found');
@@ -543,5 +595,6 @@ module.exports = {
   findLastMsg,
   findField,
   findAns,
-  find_ContentField
+  find_ContentField,
+  clearUserCache
 };

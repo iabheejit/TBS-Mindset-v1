@@ -232,7 +232,9 @@ async function sendIMsg(currentDay, module_No, number) {
     const data = await response.json();
     const records = data.records;
 
-    records.forEach(function (record) {
+    // Process only the first record since we expect one record per day
+    if (records.length > 0) {
+        const record = records[0];
         console.log(module_No);
         let module_body = record.fields[`Module ${module_No} iBody`];
         let module_buttons = record.fields[`Module ${module_No} iButtons`];
@@ -240,12 +242,12 @@ async function sendIMsg(currentDay, module_No, number) {
         console.log("Executing Interactive ");
         let options = module_buttons.split("\n").filter(n => n);
 
-        let data = options.map(option => ({ text: option }));
+        let buttonData = options.map(option => ({ text: option }));
 
         setTimeout(() => {
-            WA.sendDynamicInteractiveMsg(data, module_body, number);
+            WA.sendDynamicInteractiveMsg(buttonData, module_body, number);
         }, 35000);
-    });
+    }
 }
 
 async function sendQues(currentDay, module_No, number) {
@@ -266,7 +268,9 @@ async function sendQues(currentDay, module_No, number) {
     const data = await response.json();
     const records = data.records;
 
-    records.forEach(async function (record) {
+    // Process first record instead of forEach with async (which doesn't await properly)
+    if (records.length > 0) {
+        const record = records[0];
         let module_ques = record.fields[`Module ${module_No} Question`];
 
         console.log("Executing Question ");
@@ -281,7 +285,7 @@ async function sendQues(currentDay, module_No, number) {
         setTimeout(() => {
             WA.sendText("⬇⁣", number);
         }, 3000);
-    });
+    }
 }
 
 
@@ -304,21 +308,24 @@ async function store_responses(number, value) {
     const data = await response.json();
     const records = data.records;
 
-    records.forEach(async function (record) {
+    // Use for...of instead of forEach with async to properly await
+    for (const record of records) {
         let id = record.id;
         let currentModule = record.fields["Next Module"];
         let currentDay = record.fields["Next Day"];
         let last_msg = await us.findLastMsg(number).then().catch(e => console.log("last msg error " + e));
+        
+        // Fetch these values once and reuse them throughout the function
         let list = await us.findTitle(currentDay, currentModule, number).then().catch(e => console.error(e));
-
         let title = list[0];
-        let feedback = ["I am not sure", "No, I do not", "Some parts are confusing", "Yes, I do"];
         let correct_ans = await us.findAns(currentDay, currentModule, number).then().catch(e => console.log("Error in findAns ", e));
-        // console.log("Correct ans ", correct_ans);
+        let existingValues = await us.findField("Question Responses", number).then().catch(e => console.error(e));
+        
         if (correct_ans == null) {
             console.log("currentDay ", currentDay);
-            let existingValues = await us.findField("Question Responses", number).then().catch(e => console.error(e)); console.log("existingValues 1 ", existingValues, title);
+            console.log("existingValues 1 ", existingValues, title);
             
+            let newValues;
             if (existingValues == 0) {
                 console.log("existingValues 2 ");
                 existingValues = "";
@@ -331,13 +338,11 @@ async function store_responses(number, value) {
                 console.log("2.1 List Feedback already recorded");
                 await findContent(currentDay, currentModule, number);
             } else {
-                us.updateField(id, "Question Responses", newValues).then(async () => {
-                    console.log("2.2 List New Feedback recorded");
-                    await findContent(currentDay, currentModule, number);
-
-                    console.log("1. Updating");
-                    await us.updateField(id, "Last_Msg", title);
-                });
+                await us.updateField(id, "Question Responses", newValues);
+                console.log("2.2 List New Feedback recorded");
+                await findContent(currentDay, currentModule, number);
+                console.log("1. Updating");
+                await us.updateField(id, "Last_Msg", title);
             }
 
             // if (existingValues.includes(`Day ${currentDay} -`)) {
@@ -401,21 +406,13 @@ async function store_responses(number, value) {
             // }
             // }
         } else {
-            let correct_ans = await us.findAns(currentDay, currentModule, number).then().catch(e => console.log("Error in findAns ", e));
+            // Reuse already fetched correct_ans and existingValues instead of fetching again
             console.log("Correct ans ", correct_ans);
 
-            let existingValues = await us.findField("Question Responses", number).then().catch(e => console.error(e));
-            // console.log("existingValues ", existingValues);
-
-            let list = await us.findTitle(currentDay, currentModule, number).then().catch(e => console.error(e));
-
-            let title = list[0];
             let options = list.filter((v, i) => i !== 0);
 
             const isCorrect = correct_ans === value;
             const isSecondAttempt = last_msg == "Incorrect";
-
-            // console.log(isCorrect, isSecondAttempt, correct_ans == value, value)
 
             if (isCorrect || isSecondAttempt) {
                 let congratsMessages = [
@@ -434,7 +431,6 @@ async function store_responses(number, value) {
                 } else if (isSecondAttempt) {
                     console.log("correct_ans == value ", isCorrect, correct_ans, value);
                     if (isCorrect) {
-                        // console.log(" Congrats ", congratsMessages[Math.floor(Math.random() * congratsMessages.length)])
                         WA.sendText(congratsMessages[Math.floor(Math.random() * congratsMessages.length)], number);
                     } else {
                         WA.sendText(`The correct answer is *${correct_ans}*`, number);
@@ -558,7 +554,7 @@ async function store_responses(number, value) {
                 
     //         }
         }
-    })
+    }
 }
 async function store_intResponse(number, value) {
     let course_tn = await us.findTable(number);
@@ -577,7 +573,8 @@ async function store_intResponse(number, value) {
     const data = await response.json();
     const records = data.records;
 
-    records.forEach(async function (record) {
+    // Use for...of instead of forEach with async
+    for (const record of records) {
         let id = record.id;
         let module_complete = record.fields["Module Completed"];
         let currentModule = record.fields["Next Module"];
@@ -612,10 +609,9 @@ async function store_intResponse(number, value) {
                         console.log("Interactive Feedback already recorded");
                         await find_IntContent(currentDay, currentModule, number);
                     } else {
-                        us.updateField(id, "Interactive_Responses", newValues).then(async () => {
-                            console.log("New Interactive Feedback recorded");
-                            await find_IntContent(currentDay, currentModule, number);
-                        });
+                        await us.updateField(id, "Interactive_Responses", newValues);
+                        console.log("New Interactive Feedback recorded");
+                        await find_IntContent(currentDay, currentModule, number);
                     }
                     break;
                 }
@@ -623,7 +619,7 @@ async function store_intResponse(number, value) {
         } else {
             console.log("List empty");
         }
-    });
+    }
 }
 
 
@@ -644,7 +640,8 @@ async function store_quesResponse(number, value) {
     const data = await response.json();
     const records = data.records;
 
-    records.forEach(async function (record) {
+    // Use for...of instead of forEach with async
+    for (const record of records) {
         let id = record.id;
         let currentModule = record.fields["Next Module"];
         let currentDay = record.fields["Next Day"];
@@ -693,17 +690,16 @@ async function store_quesResponse(number, value) {
                             await find_QContent(currentDay, currentModule, number);
                         }
                     } else {
-                        us.updateField(id, "Responses", newValues).then(async () => {
-                            console.log("3. New Feedback recorded");
-                            await find_QContent(currentDay, currentModule, number);
-                        });
+                        await us.updateField(id, "Responses", newValues);
+                        console.log("3. New Feedback recorded");
+                        await find_QContent(currentDay, currentModule, number);
                     }
                 }
             } else {
                 console.log("No ques");
             }
         }
-    });
+    }
 }
 
 
@@ -725,7 +721,9 @@ async function findContent(currentDay, module_No, number) {
     const data = await response.json();
     const records = data.records;
 
-    records.forEach(async function (record) {
+    // Process first record only (we expect one record per day)
+    if (records.length > 0) {
+        const record = records[0];
         setTimeout(async () => {
             for (let i = module_No + 1;i<= 5; i++) {
                 let module_text = record.fields[`Module ${i} Text`];
@@ -749,7 +747,7 @@ async function findContent(currentDay, module_No, number) {
                 }
             }
         }, 500);
-    });
+    }
 }
 
 async function find_IntContent(currentDay, module_No, number) {
@@ -769,7 +767,9 @@ async function find_IntContent(currentDay, module_No, number) {
     const data = await response.json();
     const records = data.records;
 
-    records.forEach(async function (record) {
+    // Process first record only (we expect one record per day)
+    if (records.length > 0) {
+        const record = records[0];
         let module_title = record.fields[`Module ${module_No} LTitle`];
         let id = await us.getID(number).then().catch(e => console.log(e));
 
@@ -801,7 +801,7 @@ async function find_IntContent(currentDay, module_No, number) {
                 }
             }, 500);
         }
-    });
+    }
 }
 
 
